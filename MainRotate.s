@@ -1,0 +1,73 @@
+	AREA |.text|, CODE, READONLY
+	ENTRY
+	EXPORT __main
+
+	IMPORT MOTOR_INIT
+
+	IMPORT MOTOR_RIGHT_ON
+	IMPORT MOTOR_RIGHT_OFF
+	IMPORT MOTOR_RIGHT_FORWARD
+	IMPORT MOTOR_RIGHT_BACKWARD
+	IMPORT MOTOR_RIGHT_TOGGLE
+
+	IMPORT MOTOR_LEFT_ON
+	IMPORT MOTOR_LEFT_OFF
+	IMPORT MOTOR_LEFT_FORWARD
+	IMPORT MOTOR_LEFT_BACKWARD
+	IMPORT MOTOR_LEFT_TOGGLE
+
+	IMPORT LED_INIT
+	IMPORT LED_RIGHT_ON
+	IMPORT LED_RIGHT_OFF
+	IMPORT LED_LEFT_ON
+	IMPORT LED_LEFT_OFF
+
+	IMPORT SWITCH_INIT
+	IMPORT SWITCH_1_PRESSED
+	IMPORT SWITCH_2_PRESSED
+
+__main
+	; Initialisation
+	BL MOTOR_INIT
+	BL LED_INIT
+	BL SWITCH_INIT
+
+__waiting_for_buttons
+	BL SWITCH_1_PRESSED
+	BNE __waiting_for_buttons
+
+	; Activer les deux moteurs droit et gauche
+	BL MOTOR_RIGHT_ON
+	BL MOTOR_LEFT_ON
+
+	; Boucle de pilotage des 2 Moteurs (Evalbot tourne sur lui même)
+__loop	
+	; Evalbot avance droit devant
+	BL MOTOR_RIGHT_FORWARD
+	BL MOTOR_LEFT_FORWARD
+	BL LED_RIGHT_ON
+	BL LED_LEFT_OFF
+
+	; Avancement pendant une période (deux WAIT)
+	BL WAIT
+	BL WAIT
+
+	; Rotation à droite de l'Evalbot pendant une demi-période (1 seul WAIT)
+	BL MOTOR_RIGHT_BACKWARD
+	BL LED_RIGHT_OFF
+	BL LED_LEFT_ON
+	BL WAIT
+
+	B __loop
+
+;; Boucle d'attante
+WAIT
+	LDR R1, =0xAFFFFF 
+__WAIT_loop
+	SUBS R1, #1
+	BNE __WAIT_loop
+
+	BX LR
+
+	NOP
+	END
