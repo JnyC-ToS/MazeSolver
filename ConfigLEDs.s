@@ -15,12 +15,15 @@ LEDS      EQU 0x30
 	IMPORT GPIO_DR2R
 
 	IMPORT STR_ORR
+	IMPORT STR_EOR
 
 	EXPORT LED_INIT
 	EXPORT LED_RIGHT_ON
 	EXPORT LED_RIGHT_OFF
+	EXPORT LED_RIGHT_TOGGLE
 	EXPORT LED_LEFT_ON
 	EXPORT LED_LEFT_OFF
+	EXPORT LED_LEFT_TOGGLE
 
 LED_INIT
 	;PUSH {R0-R2, LR}
@@ -76,6 +79,21 @@ LED_RIGHT_OFF
 
 	BX LR
 
+LED_RIGHT_TOGGLE
+	;PUSH {R0-R2, LR}
+	MOV R10, LR
+
+	; Chargement de l'adresse de base du port F
+	LDR R0, =GPIO_PORTF_BASE
+	MOV R1, #LED_RIGHT<<2
+	MOV R2, #LED_RIGHT
+	; Stockage de l'état de la LED avec un masque
+	BL STR_EOR
+
+	;POP {R0-R2, PC}
+	MOV LR, R10
+	BX LR
+
 LED_LEFT_ON
 	; Chargement de l'adresse de base du port F
 	LDR R0, =GPIO_PORTF_BASE
@@ -92,6 +110,21 @@ LED_LEFT_OFF
 	; Stockage de l'état de la LED avec un masque
 	STR R1, [R0, #LED_LEFT<<2]
 
+	BX LR
+
+LED_LEFT_TOGGLE
+	;PUSH {R0-R2, LR}
+	MOV R10, LR
+
+	; Chargement de l'adresse de base du port F
+	LDR R0, =GPIO_PORTF_BASE
+	MOV R1, #LED_LEFT<<2
+	MOV R2, #LED_LEFT
+	; Stockage de l'état de la LED avec un masque
+	BL STR_EOR
+
+	;POP {R0-R2, PC}
+	MOV LR, R10
 	BX LR
 
 	END
