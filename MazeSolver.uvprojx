@@ -409,9 +409,9 @@
               <FilePath>.\Constants.s</FilePath>
             </File>
             <File>
-              <FileName>MainTesting.s</FileName>
+              <FileName>MainComplete.s</FileName>
               <FileType>2</FileType>
-              <FilePath>.\MainTesting.s</FilePath>
+              <FilePath>.\MainComplete.s</FilePath>
             </File>
           </Files>
         </Group>

@@ -242,8 +242,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\MainTesting.s</PathWithFileName>
-      <FilenameWithoutPath>MainTesting.s</FilenameWithoutPath>
+      <PathWithFileName>.\MainComplete.s</PathWithFileName>
+      <FilenameWithoutPath>MainComplete.s</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
