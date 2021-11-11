@@ -48,8 +48,7 @@ MOTOR_SPEED EQU 0x1A2
 	EXPORT MOTOR_LEFT_TOGGLE
 
 MOTOR_INIT
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Activation du module PWM sur l'horloge
 	LDR R0, =SYSCTL_BASE
@@ -139,14 +138,11 @@ MOTOR_INIT
 	MOV R2, #0x2
 	STR R2, [R0, #0x2<<2]
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 ; R0 = Adresse de base du modulateur à initialiser
 PWM_INIT
-	;PUSH {R1-R2, LR}
-	MOV R11, LR
+	PUSH {R1-R2, LR}
 
 	; Contrôle du mode : compteur
 	LDR R1, =PWM_CTL
@@ -183,13 +179,10 @@ PWM_INIT
 	MOV R2, #0x07
 	BL STR_ORR
 
-	;POP {R1-R2, PC}
-	MOV LR, R11
-	BX LR
+	POP {R1-R2, PC}
 
 MOTOR_RIGHT_ON
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Chargement de l'adresse de base du modulateur
 	LDR R0, =PWM_BASE
@@ -198,13 +191,10 @@ MOTOR_RIGHT_ON
 	MOV R2, #0x01
 	BL STR_ORR
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 MOTOR_RIGHT_OFF
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Chargement de l'adresse de base du modulateur
 	LDR R0, =PWM_BASE
@@ -213,13 +203,10 @@ MOTOR_RIGHT_OFF
 	MOV R2, #0x0E
 	BL STR_AND
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 MOTOR_LEFT_ON
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Chargement de l'adresse de base du modulateur
 	LDR R0, =PWM_BASE
@@ -228,13 +215,10 @@ MOTOR_LEFT_ON
 	MOV R2, #0x04
 	BL STR_ORR
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 MOTOR_LEFT_OFF
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Chargement de l'adresse de base du modulateur
 	LDR R0, =PWM_BASE
@@ -243,12 +227,10 @@ MOTOR_LEFT_OFF
 	MOV R2, #0x0B
 	BL STR_AND
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 MOTOR_RIGHT_BACKWARD
-	;PUSH {R0-R1}
+	PUSH {R0-R1}
 
 	; Chargement de l'adresse de base du port D
 	LDR R0, =GPIO_PORTD_BASE
@@ -256,11 +238,11 @@ MOTOR_RIGHT_BACKWARD
 	; Stockage de l'état du moteur avec un masque
 	STR R1, [R0, #0x2<<2]
 
-	;POP {R0-R1}
+	POP {R0-R1}
 	BX LR
 
 MOTOR_RIGHT_FORWARD
-	;PUSH {R0-R1}
+	PUSH {R0-R1}
 
 	; Chargement de l'adresse de base du port D
 	LDR R0, =GPIO_PORTD_BASE
@@ -268,11 +250,11 @@ MOTOR_RIGHT_FORWARD
 	; Stockage de l'état du moteur avec un masque
 	STR R1, [R0, #0x2<<2]
 
-	;POP {R0-R1}
+	POP {R0-R1}
 	BX LR
 
 MOTOR_LEFT_BACKWARD
-	;PUSH {R0-R1}
+	PUSH {R0-R1}
 
 	; Chargement de l'adresse de base du port H
 	LDR R0, =GPIO_PORTH_BASE
@@ -280,11 +262,11 @@ MOTOR_LEFT_BACKWARD
 	; Stockage de l'état du moteur avec un masque
 	STR R1, [R0, #0x2<<2]
 
-	;POP {R0-R1}
+	POP {R0-R1}
 	BX LR
 
 MOTOR_LEFT_FORWARD
-	;PUSH {R0-R1}
+	PUSH {R0-R1}
 
 	; Chargement de l'adresse de base du port H
 	LDR R0, =GPIO_PORTH_BASE
@@ -292,12 +274,11 @@ MOTOR_LEFT_FORWARD
 	; Stockage de l'état du moteur avec un masque
 	STR R1, [R0, #0x2<<2]
 
-	;POP {R0-R1}
+	POP {R0-R1}
 	BX LR
 
 MOTOR_RIGHT_TOGGLE
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Chargement de l'adresse de base du port D
 	LDR R0, =GPIO_PORTD_BASE
@@ -306,13 +287,10 @@ MOTOR_RIGHT_TOGGLE
 	; Stockage de l'état du moteur avec un masque
 	BL STR_EOR
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 MOTOR_LEFT_TOGGLE
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Chargement de l'adresse de base du port H
 	LDR R0, =GPIO_PORTH_BASE
@@ -321,8 +299,6 @@ MOTOR_LEFT_TOGGLE
 	; Stockage de l'état du moteur avec un masque
 	BL STR_EOR
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 	END

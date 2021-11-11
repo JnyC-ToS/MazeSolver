@@ -22,8 +22,7 @@ BUMPERS      EQU 0x03
 	EXPORT BUMPER_ANY_PRESSED
 
 BUMPER_INIT
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Activation du port E sur l'horloge
 	LDR R0, =SYSCTL_BASE
@@ -48,9 +47,7 @@ BUMPER_INIT
 	LDR R1, =GPIO_PUR
 	BL STR_ORR
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 ; Z = 1 si pare-choc droit enfoncé, 0 si pare-choc droit intact
 BUMPER_RIGHT_PRESSED
@@ -74,8 +71,7 @@ BUMPER_LEFT_PRESSED
 
 ; Z = 1 si les deux pare-chocs sont enfoncés, 0 si l'un des deux pare-chocs est intact
 BUMPER_BOTH_PRESSED
-	;PUSH {LR}
-	MOV R10, LR
+	PUSH {LR}
 
 	; Vérification des pare-chocs
 	BL BUMPER_RIGHT_PRESSED
@@ -92,14 +88,11 @@ __BUMPER_BOTH_PRESSED_some_released
 	CMP LR, #0
 
 __BUMPER_BOTH_PRESSED_end
-	;POP {PC}
-	MOV LR, R10
-	BX LR
+	POP {PC}
 
 ; Z = 1 si l'un des deux pare-chocs est enfoncé, 0 si les deux pare-chocs sont intacts
 BUMPER_ANY_PRESSED
-	;PUSH {LR}
-	MOV R10, LR
+	PUSH {LR}
 
 	; Vérification des pare-chocs
 	BL BUMPER_RIGHT_PRESSED
@@ -116,8 +109,6 @@ __BUMPER_ANY_PRESSED_some_pressed
 	CMP LR, LR
 
 __BUMPER_ANY_PRESSED_end
-	;POP {PC}
-	MOV LR, R10
-	BX LR
+	POP {PC}
 
 	END

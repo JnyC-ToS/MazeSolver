@@ -26,8 +26,7 @@ LEDS      EQU 0x30
 	EXPORT LED_LEFT_TOGGLE
 
 LED_INIT
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Activation du port F sur l'horloge
 	LDR R0, =SYSCTL_BASE
@@ -56,10 +55,7 @@ LED_INIT
 	LDR R1, =GPIO_DR2R
 	BL STR_ORR
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
-	;BX R10
+	POP {R0-R2, PC}
 
 LED_RIGHT_ON
 	; Chargement de l'adresse de base du port F
@@ -80,8 +76,7 @@ LED_RIGHT_OFF
 	BX LR
 
 LED_RIGHT_TOGGLE
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Chargement de l'adresse de base du port F
 	LDR R0, =GPIO_PORTF_BASE
@@ -90,9 +85,7 @@ LED_RIGHT_TOGGLE
 	; Stockage de l'état de la LED avec un masque
 	BL STR_EOR
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 LED_LEFT_ON
 	; Chargement de l'adresse de base du port F
@@ -113,8 +106,7 @@ LED_LEFT_OFF
 	BX LR
 
 LED_LEFT_TOGGLE
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Chargement de l'adresse de base du port F
 	LDR R0, =GPIO_PORTF_BASE
@@ -123,8 +115,6 @@ LED_LEFT_TOGGLE
 	; Stockage de l'état de la LED avec un masque
 	BL STR_EOR
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 	END

@@ -32,8 +32,7 @@ _switch_2_previous_state SPACE 1
 	EXPORT SWITCH_BOTH_WAIT_UNTIL_PRESSED
 
 SWITCH_INIT
-	;PUSH {R0-R2, LR}
-	MOV R10, LR
+	PUSH {R0-R2, LR}
 
 	; Activation du port D sur l'horloge
 	LDR R0, =SYSCTL_BASE
@@ -66,9 +65,7 @@ SWITCH_INIT
 	MOV R1, #SWITCH_2
 	STR R1, [R0]
 
-	;POP {R0-R2, PC}
-	MOV LR, R10
-	BX LR
+	POP {R0-R2, PC}
 
 ; Z = 1 si bouton pressé, 0 si bouton inactif
 SWITCH_1_PRESSED
@@ -133,17 +130,14 @@ __SWITCH_1_RELEASED_ONCE_modified_state
 	BX LR
 
 SWITCH_1_WAIT_UNTIL_PRESSED
-	;PUSH {LR}
-	MOV R10, LR
+	PUSH {LR}
 
 __SWITCH_1_WAIT_UNTIL_PRESSED_loop
 	; Boucle tant que bouton inactif
 	BL SWITCH_1_PRESSED
 	BNE __SWITCH_1_WAIT_UNTIL_PRESSED_loop
 
-	;POP {PC}
-	MOV LR, R10
-	BX LR
+	POP {PC}
 
 ; Z = 1 si bouton pressé, 0 si bouton inactif
 SWITCH_2_PRESSED
@@ -208,21 +202,17 @@ __SWITCH_2_RELEASED_ONCE_modified_state
 	BX LR
 
 SWITCH_2_WAIT_UNTIL_PRESSED
-	;PUSH {LR}
-	MOV R10, LR
+	PUSH {LR}
 
 __SWITCH_2_WAIT_UNTIL_PRESSED_loop
 	; Boucle tant que bouton inactif
 	BL SWITCH_2_PRESSED
 	BNE __SWITCH_2_WAIT_UNTIL_PRESSED_loop
 
-	;POP {PC}
-	MOV LR, R10
-	BX LR
+	POP {PC}
 
 SWITCH_BOTH_WAIT_UNTIL_PRESSED
-	;PUSH {LR}
-	MOV R10, LR
+	PUSH {LR}
 
 __SWITCH_BOTH_WAIT_UNTIL_PRESSED_loop
 	; Boucle tant que boutons inactifs
@@ -231,8 +221,6 @@ __SWITCH_BOTH_WAIT_UNTIL_PRESSED_loop
 	BL SWITCH_2_PRESSED
 	BNE __SWITCH_BOTH_WAIT_UNTIL_PRESSED_loop
 
-	;POP {PC}
-	MOV LR, R10
-	BX LR
+	POP {PC}
 
 	END
