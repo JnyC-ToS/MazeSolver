@@ -67,6 +67,15 @@ PWM_CMPB   EQU 0x01C
 PWM_GENA   EQU 0x020
 PWM_GENB   EQU 0x024
 
+; Adresses de base des Quadrature Encoder Interfaces
+QEI0_BASE EQU 0x4002C000
+QEI1_BASE EQU 0x4002D000
+
+; Décalages d'adresses des registres QEI
+QEI_CTL    EQU 0x000
+QEI_POS    EQU 0x008
+QEI_MAXPOS EQU 0x00C
+
 	AREA |.text|, CODE, READONLY
 
 	; Export des constantes
@@ -132,6 +141,13 @@ PWM_GENB   EQU 0x024
 	EXPORT PWM_CMPB
 	EXPORT PWM_GENA
 	EXPORT PWM_GENB
+
+	EXPORT QEI0_BASE
+	EXPORT QEI1_BASE
+
+	EXPORT QEI_CTL
+	EXPORT QEI_POS
+	EXPORT QEI_MAXPOS
 
 	; Export des fonctions utilitaires
 

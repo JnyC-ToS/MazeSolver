@@ -1,7 +1,9 @@
 ; Bits de contrôle des LEDs
+LED_BACK1 EQU 0x04
+LED_BACK2 EQU 0x08
 LED_RIGHT EQU 0x10
 LED_LEFT  EQU 0x20
-LEDS      EQU 0x30
+LEDS      EQU 0x3C
 
 	AREA |.text|, CODE, READONLY
 
@@ -24,6 +26,12 @@ LEDS      EQU 0x30
 	EXPORT LED_LEFT_ON
 	EXPORT LED_LEFT_OFF
 	EXPORT LED_LEFT_TOGGLE
+	EXPORT LED_BACK1_ON
+	EXPORT LED_BACK1_OFF
+	EXPORT LED_BACK1_TOGGLE
+	EXPORT LED_BACK2_ON
+	EXPORT LED_BACK2_OFF
+	EXPORT LED_BACK2_TOGGLE
 
 LED_INIT
 	PUSH {R0-R2, LR}
@@ -112,6 +120,66 @@ LED_LEFT_TOGGLE
 	LDR R0, =GPIO_PORTF_BASE
 	MOV R1, #LED_LEFT<<2
 	MOV R2, #LED_LEFT
+	; Stockage de l'état de la LED avec un masque
+	BL STR_EOR
+
+	POP {R0-R2, PC}
+
+LED_BACK1_ON
+	; Chargement de l'adresse de base du port F
+	LDR R0, =GPIO_PORTF_BASE
+	MOV R1, #0
+	; Stockage de l'état de la LED avec un masque
+	STR R1, [R0, #LED_BACK1<<2]
+
+	BX LR
+
+LED_BACK1_OFF
+	; Chargement de l'adresse de base du port F
+	LDR R0, =GPIO_PORTF_BASE
+	MOV R1, #LED_BACK1
+	; Stockage de l'état de la LED avec un masque
+	STR R1, [R0, #LED_BACK1<<2]
+
+	BX LR
+
+LED_BACK1_TOGGLE
+	PUSH {R0-R2, LR}
+
+	; Chargement de l'adresse de base du port F
+	LDR R0, =GPIO_PORTF_BASE
+	MOV R1, #LED_BACK1<<2
+	MOV R2, #LED_BACK1
+	; Stockage de l'état de la LED avec un masque
+	BL STR_EOR
+
+	POP {R0-R2, PC}
+
+LED_BACK2_ON
+	; Chargement de l'adresse de base du port F
+	LDR R0, =GPIO_PORTF_BASE
+	MOV R1, #0
+	; Stockage de l'état de la LED avec un masque
+	STR R1, [R0, #LED_BACK2<<2]
+
+	BX LR
+
+LED_BACK2_OFF
+	; Chargement de l'adresse de base du port F
+	LDR R0, =GPIO_PORTF_BASE
+	MOV R1, #LED_BACK2
+	; Stockage de l'état de la LED avec un masque
+	STR R1, [R0, #LED_BACK2<<2]
+
+	BX LR
+
+LED_BACK2_TOGGLE
+	PUSH {R0-R2, LR}
+
+	; Chargement de l'adresse de base du port F
+	LDR R0, =GPIO_PORTF_BASE
+	MOV R1, #LED_BACK2<<2
+	MOV R2, #LED_BACK2
 	; Stockage de l'état de la LED avec un masque
 	BL STR_EOR
 
