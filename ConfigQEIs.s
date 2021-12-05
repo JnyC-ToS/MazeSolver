@@ -213,6 +213,7 @@ QEI_RIGHT_TEST
 	SUBS R3, R5
 	; Valeur absolue (complément à 2 si résultat négatif)
 	MVNLO R3, R3
+	ADDLO R3, #1
 
 	; Comparaison avec la valeur de test
 	CMP R3, R0
@@ -254,6 +255,7 @@ QEI_LEFT_TEST
 	SUBS R3, R5
 	; Valeur absolue (complément à 2 si résultat négatif)
 	MVNLO R3, R3
+	ADDLO R3, #1
 
 	; Comparaison avec la valeur de test
 	CMP R3, R0

@@ -1,5 +1,17 @@
-MOVE_DURATION EQU 0x2D5190
-ROTATE_DURATION EQU 0x10E24AE
+MODE_1_MOVE_DURATION   EQU 0x1339E0
+MODE_1_ROTATE_DURATION EQU 0xA037A0
+MODE_2_MOVE_DURATION   EQU 0x122870
+MODE_2_ROTATE_DURATION EQU 0x9C400
+BLINK_DURATION         EQU 0x40000
+
+ACTION_END          EQU 0
+ACTION_MOVE_FORWARD EQU 1
+ACTION_ROTATE_LEFT  EQU 2
+ACTION_ROTATE_RIGHT EQU 3
+
+	AREA |.vars|, DATA, READWRITE
+
+_path SPACE 200
 
 	AREA |.text|, CODE, READONLY
 	ENTRY
@@ -28,7 +40,7 @@ ROTATE_DURATION EQU 0x10E24AE
 	IMPORT LED_RIGHT_ON
 	IMPORT LED_RIGHT_OFF
 	IMPORT LED_RIGHT_TOGGLE
-;	IMPORT LED_LEFT_ON
+	IMPORT LED_LEFT_ON
 	IMPORT LED_LEFT_OFF
 	IMPORT LED_LEFT_TOGGLE
 	IMPORT LED_BACK1_ON
@@ -39,14 +51,14 @@ ROTATE_DURATION EQU 0x10E24AE
 ;	IMPORT LED_BACK2_TOGGLE
 
 	IMPORT SWITCH_INIT
-	IMPORT SWITCH_1_PRESSED
-;	IMPORT SWITCH_1_PRESSED_ONCE
+;	IMPORT SWITCH_1_PRESSED
+	IMPORT SWITCH_1_PRESSED_ONCE
 ;	IMPORT SWITCH_1_RELEASED_ONCE
-	IMPORT SWITCH_1_WAIT_UNTIL_PRESSED
-	IMPORT SWITCH_2_PRESSED
-;	IMPORT SWITCH_2_PRESSED_ONCE
-;	IMPORT SWITCH_2_RELEASED_ONCE
-;	IMPORT SWITCH_2_WAIT_UNTIL_PRESSED
+;	IMPORT SWITCH_1_WAIT_UNTIL_PRESSED
+;	IMPORT SWITCH_2_PRESSED
+	IMPORT SWITCH_2_PRESSED_ONCE
+	IMPORT SWITCH_2_RELEASED_ONCE
+	IMPORT SWITCH_2_WAIT_UNTIL_PRESSED
 ;	IMPORT SWITCH_BOTH_WAIT_UNTIL_PRESSED
 
 	IMPORT BUMPER_INIT
@@ -57,63 +69,214 @@ ROTATE_DURATION EQU 0x10E24AE
 
 __main
 	; Initialisation
-	BL QEI_INIT
+;	BL QEI_INIT
 	BL MOTOR_INIT
 	BL LED_INIT
 	BL SWITCH_INIT
 	BL BUMPER_INIT
 
-    BL LED_LEFT_OFF
-    BL LED_RIGHT_OFF
-    BL LED_BACK1_OFF
-    BL LED_BACK2_OFF
-;    BL MOTOR_RESET
+	LDR R10, =_path
 
-    BL SWITCH_1_WAIT_UNTIL_PRESSED
+__start
+	BL MOTOR_LEFT_OFF
+	BL MOTOR_RIGHT_OFF
+	BL LED_LEFT_OFF
+	BL LED_RIGHT_OFF
+	BL LED_BACK1_OFF
+	BL LED_BACK2_OFF
+;	BL MOTOR_RESET
 
-    BL MOTOR_LEFT_ON
-    BL MOTOR_RIGHT_ON
+__wait_for_mode
+	; Boucle d'attente de sélection de mode
+	BL SWITCH_2_PRESSED_ONCE
+	BEQ __mode_2_start
 
-__move_start
-    BL MOTOR_LEFT_FORWARD
-    BL MOTOR_RIGHT_FORWARD
+	BL SWITCH_1_PRESSED_ONCE
+	BNE __wait_for_mode
+
+__mode_1_start
+	; Début du mode 1
+	MOV R9, #0
+	BL MOTOR_LEFT_ON
+	BL MOTOR_RIGHT_ON
+	BL LED_LEFT_ON
+
+__mode_1_move_start
+	BL MOTOR_LEFT_FORWARD
+	BL MOTOR_RIGHT_FORWARD
 	BL LED_BACK1_ON
 	BL LED_BACK2_ON
-    
-    LDR R5, =MOVE_DURATION
 
-__move_loop
-    BL BUMPER_ANY_PRESSED
-    BEQ __rotate_start_left
+	; Avancer tout droit
+	MOV R11, #ACTION_MOVE_FORWARD
+	STRB R11, [R10, R9]
+	ADD R9, #1
 
-    SUBS R5, #1
-    BEQ __rotate_start_right
+	LDR R4, =MODE_1_MOVE_DURATION
 
-    B __move_loop
+__mode_1_move_loop
+	BL BUMPER_ANY_PRESSED
+	BEQ __mode_1_rotate_start_left
 
-__rotate_start_left
-    BL MOTOR_LEFT_BACKWARD
-    BL MOTOR_RIGHT_FORWARD
+	SUBS R4, #1
+	BEQ __mode_1_rotate_start_right
+
+	BL SWITCH_1_PRESSED_ONCE
+	BNE __mode_1_move_loop
+
+	; Bouton 1 pressé : Fin du parcours
+	MOV R11, #ACTION_END
+	STRB R11, [R10, R9]
+
+	B __start
+
+__mode_1_rotate_start_left
+	BL MOTOR_LEFT_BACKWARD
+	BL MOTOR_RIGHT_FORWARD
 	BL LED_BACK1_ON
 	BL LED_BACK2_OFF
 
-    LDR R4, =ROTATE_DURATION
-    B __rotate_loop
+	; Tourner à gauche signifie collision, donc à éviter pour le mode 2
+	; Déplacement précédent forcément "Avancer" donc vérification pré-précédent
+	SUBS R9, #2
+	MOVMI R9, #0
 
-__rotate_start_right
-    BL MOTOR_LEFT_FORWARD
-    BL MOTOR_RIGHT_BACKWARD
+	; Si c'était tourner à droite, ça veut dire qu'on retourne à gauche donc rien à faire
+	LDRB R11, [R10, R9]
+	CMP R11, #ACTION_ROTATE_RIGHT
+	BEQ __mode_1_rotate_start
+
+	; Sinon, il faut remplacer le précédent par une rotation gauche (sans toucher le pré-précédent)
+	ADD R9, #1
+	MOV R11, #ACTION_ROTATE_LEFT
+	STRB R11, [R10, R9]
+	ADD R9, #1
+
+	B __mode_1_rotate_start
+
+__mode_1_rotate_start_right
+	BL MOTOR_LEFT_FORWARD
+	BL MOTOR_RIGHT_BACKWARD
 	BL LED_BACK1_OFF
 	BL LED_BACK2_ON
 
-    LDR R4, =ROTATE_DURATION
-    ; B __rotate_loop
+	; Tourner à droite
+	MOV R11, #ACTION_ROTATE_RIGHT
+	STRB R11, [R10, R9]
+	ADD R9, #1
 
-__rotate_loop
-    SUBS R4, #1
-    BEQ __move_start
+	; B __mode_1_rotate_start
 
-    B __rotate_loop
+__mode_1_rotate_start
+	LDR R4, =MODE_1_ROTATE_DURATION
+
+__mode_1_rotate_loop
+	SUBS R4, #1
+	BEQ __mode_1_move_start
+
+	B __mode_1_rotate_loop
+
+__mode_2_start
+	; Début du mode 2
+	MOV R9, #0
+	BL MOTOR_LEFT_ON
+	BL MOTOR_RIGHT_ON
+	BL LED_RIGHT_ON
+
+__mode_2_loop
+	LDRB R11, [R10, R9]
+	ADD R9, #1
+
+	CMP R11, #ACTION_MOVE_FORWARD
+	BEQ __mode_2_move_start
+
+	CMP R11, #ACTION_ROTATE_LEFT
+	BEQ __mode_2_rotate_start_left
+
+	CMP R11, #ACTION_ROTATE_RIGHT
+	BEQ __mode_2_rotate_start_right
+
+	; Fin du parcours : Succès
+	B __mode_2_end
+
+__mode_2_move_start
+	BL MOTOR_LEFT_FORWARD
+	BL MOTOR_RIGHT_FORWARD
+	BL LED_BACK1_ON
+	BL LED_BACK2_ON
+
+	LDR R4, =MODE_2_MOVE_DURATION
+	B __mode_2_move_loop
+
+__mode_2_rotate_start_left
+	BL MOTOR_LEFT_BACKWARD
+	BL MOTOR_RIGHT_FORWARD
+	BL LED_BACK1_ON
+	BL LED_BACK2_OFF
+
+	B __mode_2_start_rotate
+
+__mode_2_rotate_start_right
+	BL MOTOR_LEFT_FORWARD
+	BL MOTOR_RIGHT_BACKWARD
+	BL LED_BACK1_OFF
+	BL LED_BACK2_ON
+
+	; B __mode_2_start_rotate
+
+__mode_2_start_rotate
+	LDR R4, =MODE_2_ROTATE_DURATION
+
+__mode_2_move_loop
+	BL SWITCH_2_PRESSED_ONCE
+	BNE __mode_2_continue
+
+	BL MOTOR_LEFT_OFF
+	BL MOTOR_RIGHT_OFF
+
+__mode_2_pause
+	; Attendre que le bouton soit relâché avant qu'il soit pressé de nouveau pour sortir de la pause
+	BL SWITCH_2_RELEASED_ONCE
+	BNE __mode_2_pause
+
+__mode_2_pause_loop
+	BL SWITCH_2_PRESSED_ONCE
+	BNE __mode_2_pause_loop
+
+	BL MOTOR_LEFT_ON
+	BL MOTOR_RIGHT_ON
+
+__mode_2_continue
+	BL BUMPER_ANY_PRESSED
+	BEQ __mode_2_failed
+
+	SUBS R4, #1
+	BEQ __mode_2_loop
+
+	B __mode_2_move_loop
+
+__mode_2_failed
+	BL LED_LEFT_ON
+
+__mode_2_end
+	BL MOTOR_LEFT_OFF
+	BL MOTOR_RIGHT_OFF
+	BL LED_BACK1_OFF
+	BL LED_BACK2_OFF
+
+__mode_2_end_blink
+	BL LED_LEFT_TOGGLE
+	BL LED_RIGHT_TOGGLE
+	LDR R4, =BLINK_DURATION
+
+__mode_2_end_loop
+	BL SWITCH_2_PRESSED_ONCE
+	BEQ __start
+
+	SUBS R4, #1
+	BEQ __mode_2_end_blink
+
+	B __mode_2_end_loop
 
 	NOP
 	END
