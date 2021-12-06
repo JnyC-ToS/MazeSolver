@@ -4,10 +4,11 @@ MODE_2_MOVE_DURATION   EQU 0x122870
 MODE_2_ROTATE_DURATION EQU 0x9C400
 BLINK_DURATION         EQU 0x40000
 
-ACTION_END          EQU 0
+ACTION_NOOP         EQU 0
 ACTION_MOVE_FORWARD EQU 1
 ACTION_ROTATE_LEFT  EQU 2
 ACTION_ROTATE_RIGHT EQU 3
+ACTION_END          EQU 4
 
 	AREA |.vars|, DATA, READWRITE
 
@@ -76,6 +77,8 @@ __main
 	BL BUMPER_INIT
 
 	LDR R10, =_path
+	MOV R11, #ACTION_END
+	STRB R11, [R10]
 
 __start
 	BL MOTOR_LEFT_OFF
@@ -89,7 +92,7 @@ __start
 __wait_for_mode
 	; Boucle d'attente de sélection de mode
 	BL SWITCH_2_PRESSED_ONCE
-	BEQ __mode_2_start
+	BEQ.W __mode_2_start
 
 	BL SWITCH_1_PRESSED_ONCE
 	BNE __wait_for_mode
@@ -128,7 +131,8 @@ __mode_1_move_loop
 	MOV R11, #ACTION_END
 	STRB R11, [R10, R9]
 
-	B __start
+	BL LED_RIGHT_ON
+	B __path_cleanup
 
 __mode_1_rotate_start_left
 	BL MOTOR_LEFT_BACKWARD
@@ -176,6 +180,96 @@ __mode_1_rotate_loop
 
 	B __mode_1_rotate_loop
 
+__path_cleanup
+	PUSH {R0-R12}
+
+	MOV R0, #1 ; Indicateur de stabilité du parcours (0 = stable) : premier test s'exécute toujours
+
+__path_cleanup_start
+	CMP R0, #0
+	BEQ __path_cleanup_end
+
+	MOV R0, #0
+	MOV R9, #0
+
+__path_cleanup_next
+	LDRB R11, [R10, R9]
+
+	CMP R11, #ACTION_NOOP
+	ADDEQ R9, #1
+	BEQ __path_cleanup_next
+
+	CMP R11, #ACTION_MOVE_FORWARD
+	BEQ __path_cleanup_check_fllf_pattern
+
+	CMP R11, #ACTION_ROTATE_LEFT
+	MOVEQ R2, #ACTION_ROTATE_RIGHT
+	BEQ __path_cleanup_check_next
+
+	CMP R11, #ACTION_ROTATE_RIGHT
+	MOVEQ R2, #ACTION_ROTATE_LEFT
+	BEQ __path_cleanup_check_next
+
+	CMP R11, #ACTION_END
+	BEQ __path_cleanup_start
+
+__path_cleanup_end
+	POP {R0-R12}
+	B __start
+
+__path_cleanup_check_fllf_pattern
+	MOV R1, R9
+
+	BL __path_cleanup_get_next_not_noop
+
+	CMP R11, #ACTION_ROTATE_LEFT
+	BNE __path_cleanup_next
+
+	BL __path_cleanup_get_next_not_noop
+
+	CMP R11, #ACTION_ROTATE_LEFT
+	BNE __path_cleanup_next
+
+	MOV R2, R9
+
+	BL __path_cleanup_get_next_not_noop
+
+	CMP R11, #ACTION_MOVE_FORWARD
+	MOVNE R9, R2
+	BNE __path_cleanup_next
+
+	B __path_cleanup_clean
+
+__path_cleanup_check_next
+	MOV R1, R9
+
+	BL __path_cleanup_get_next_not_noop
+
+	CMP R11, R2
+	BNE __path_cleanup_next
+
+__path_cleanup_clean
+	MOV R11, #ACTION_NOOP
+	STRB R11, [R10, R1]
+	STRB R11, [R10, R9]
+
+	MOV R0, #1
+
+	ADD R9, #1
+	B __path_cleanup_next
+
+__path_cleanup_get_next_not_noop
+	ADD R9, #1
+	LDRB R11, [R10, R9]
+
+	CMP R11, #ACTION_END
+	BEQ __path_cleanup_start
+
+	CMP R11, #ACTION_NOOP
+	BEQ __path_cleanup_get_next_not_noop
+
+	BX LR
+
 __mode_2_start
 	; Début du mode 2
 	MOV R9, #0
@@ -186,6 +280,9 @@ __mode_2_start
 __mode_2_loop
 	LDRB R11, [R10, R9]
 	ADD R9, #1
+
+	CMP R11, #ACTION_NOOP
+	BEQ __mode_2_loop
 
 	CMP R11, #ACTION_MOVE_FORWARD
 	BEQ __mode_2_move_start
