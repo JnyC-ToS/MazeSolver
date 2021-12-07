@@ -225,9 +225,12 @@ __path_cleanup_check_fllf_pattern
 	CMP R11, #ACTION_ROTATE_LEFT
 	BNE __path_cleanup_next
 
+	MOV R2, R9
+
 	BL __path_cleanup_get_next_not_noop
 
 	CMP R11, #ACTION_ROTATE_LEFT
+	MOVNE R9, R2
 	BNE __path_cleanup_next
 
 	MOV R2, R9
